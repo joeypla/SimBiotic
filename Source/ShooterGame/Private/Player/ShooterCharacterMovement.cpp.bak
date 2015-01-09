@@ -1,0 +1,72 @@
+// Copyright 1998-2014 Epic Games, Inc. All Rights Reserved.
+
+#include "ShooterGame.h"
+
+#include "GameFramework/CharacterMovementComponent.h"
+#include "EnginePrivate.h"
+
+DEFINE_LOG_CATEGORY_STATIC(LogCharacterMovement, Log, All);
+const float MAX_STEP_SIDE_Z = 0.08f;	// maximum z value for the normal on the vertical side of steps
+
+
+void FFindFloorResult::SetFromSweep(const FHitResult& InHit, const float InSweepFloorDist, const bool bIsWalkableFloor)
+{
+	bBlockingHit = InHit.IsValidBlockingHit();
+	bWalkableFloor = bIsWalkableFloor;
+	bLineTrace = false;
+	FloorDist = InSweepFloorDist;
+	LineDist = 0.f;
+	HitResult = InHit;
+}
+
+void FFindFloorResult::SetFromLineTrace(const FHitResult& InHit, const float InSweepFloorDist, const float InLineDist, const bool bIsWalkableFloor)
+{
+	// We require a sweep that hit if we are going to use a line result.
+	check(HitResult.bBlockingHit);
+	if (HitResult.bBlockingHit && InHit.bBlockingHit)
+	{
+		// Override most of the sweep result with the line result, but save some values
+		FHitResult OldHit(HitResult);
+		HitResult = InHit;
+
+		// Restore some of the old values. We want the new normals and hit actor, however.
+		HitResult.Time = OldHit.Time;
+		HitResult.ImpactPoint = OldHit.ImpactPoint;
+		HitResult.Location = OldHit.Location;
+		HitResult.TraceStart = OldHit.TraceStart;
+		HitResult.TraceEnd = OldHit.TraceEnd;
+
+		bLineTrace = true;
+		LineDist = InLineDist;
+		bWalkableFloor = bIsWalkableFloor;
+	}
+}
+
+//----------------------------------------------------------------------//
+// UPawnMovementComponent
+//----------------------------------------------------------------------//
+UShooterCharacterMovement::UShooterCharacterMovement(const FObjectInitializer& ObjectInitializer)
+	: Super(ObjectInitializer)
+{
+}
+
+
+float UShooterCharacterMovement::GetMaxSpeed() const
+{
+	float MaxSpeed = Super::GetMaxSpeed();
+
+	const AShooterCharacter* ShooterCharacterOwner = Cast<AShooterCharacter>(PawnOwner);
+	if (ShooterCharacterOwner)
+	{
+		if (ShooterCharacterOwner->IsTargeting())
+		{
+			MaxSpeed *= ShooterCharacterOwner->GetTargetingSpeedModifier();
+		}
+		if (ShooterCharacterOwner->IsRunning())
+		{
+			MaxSpeed *= ShooterCharacterOwner->GetRunningSpeedModifier();
+		}
+	}
+
+	return MaxSpeed;
+}

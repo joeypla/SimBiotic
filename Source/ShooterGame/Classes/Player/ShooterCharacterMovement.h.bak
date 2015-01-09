@@ -1,0 +1,28 @@
+// Copyright 1998-2014 Epic Games, Inc. All Rights Reserved.
+
+/**
+ * Movement component meant for use with Pawns.
+ */
+
+#pragma once
+#include "ShooterCharacterMovement.generated.h"
+
+UENUM(BlueprintType)
+enum SBGravityMode
+{
+	GRAVITY_XNEGATIVE         UMETA(DisplayName = "X Negative"),
+	GRAVITY_XPOSITIVE         UMETA(DisplayName = "X Positive"),
+	GRAVITY_YNEGATIVE         UMETA(DisplayName = "Y Negative"),
+	GRAVITY_YPOSITIVE         UMETA(DisplayName = "Y Positive"),
+	GRAVITY_ZNEGATIVE         UMETA(DisplayName = "Z Negative"),
+	GRAVITY_ZPOSITIVE         UMETA(DisplayName = "Z Positive"),
+};
+
+UCLASS()
+class UShooterCharacterMovement : public UCharacterMovementComponent
+{
+	GENERATED_UCLASS_BODY()
+
+	virtual float GetMaxSpeed() const override;
+};
+
